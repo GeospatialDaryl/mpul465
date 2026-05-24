@@ -1,16 +1,17 @@
 from __future__ import annotations
 
+import io
 import logging
-import math
 from pathlib import Path
 
 from PIL import Image
 
 from mpul465.commands import CommandEncoder
 from mpul465.config import MPUL465Config
-from mpul465.exceptions import ImageTooWideError, SVGRenderError
+from mpul465.exceptions import ImageTooWideError
 from mpul465.graphics.packing import BitPacker
 from mpul465.graphics.raster import Rasterizer
+from mpul465.graphics.vector import VectorRenderer
 
 logger = logging.getLogger(__name__)
 
@@ -23,11 +24,14 @@ class GraphicsEngine:
         rasterizer: Rasterizer,
         encoder: CommandEncoder,
         config: MPUL465Config,
+        *,
+        vector_renderer: VectorRenderer | None = None,
     ) -> None:
         self._rasterizer = rasterizer
         self._encoder = encoder
         self._config = config
         self._packer = BitPacker()
+        self._vector = vector_renderer or VectorRenderer()
 
     def image_to_commands(
         self,
@@ -49,32 +53,8 @@ class GraphicsEngine:
         *,
         width: int | str | None = None,
     ) -> bytes:
-        try:
-            import cairosvg  # type: ignore[import-untyped]
-        except ImportError as exc:
-            raise SVGRenderError(
-                "SVG support requires 'mpul465[svg]': pip install 'mpul465[svg]'"
-            ) from exc
-
-        svg_bytes: bytes
-        if isinstance(svg, Path):
-            svg_bytes = svg.read_bytes()
-        elif isinstance(svg, str):
-            svg_bytes = Path(svg).read_bytes()
-        else:
-            svg_bytes = svg
-
-        try:
-            png_bytes: bytes = cairosvg.svg2png(
-                bytestring=svg_bytes,
-                unsafe=False,
-                output_width=self._config.dots_per_line,
-            )
-        except Exception as exc:
-            raise SVGRenderError(f"CairoSVG render failed: {exc}") from exc
-
-        import io
-
+        target = self._config.dots_per_line if width == "fit" or width is None else int(width)
+        png_bytes = self._vector.render(svg, output_width=target)
         image = Image.open(io.BytesIO(png_bytes))
         return self.image_to_commands(image, width=width)
 
