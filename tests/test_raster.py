@@ -8,6 +8,8 @@ from PIL import Image
 from mpul465 import MPUL465Config, MPUL465Printer
 from mpul465.exceptions import ImageTooWideError
 from mpul465.graphics import GraphicsEngine
+from mpul465.graphics.dither import apply_dither
+from mpul465.graphics.raster import Rasterizer
 from mpul465.graphics.packing import BitPacker
 from mpul465.graphics.raster import Rasterizer
 from mpul465.commands import CommandEncoder
@@ -114,3 +116,80 @@ def test_resolve_width_natural_equals_dots_per_line_is_accepted() -> None:
     img = Image.new("1", (100, 10), 0)
     result = engine.image_to_commands(img, width=None)
     assert len(result) > 0
+
+
+# ---------------------------------------------------------------------------
+# apply_dither — direct tests
+# ---------------------------------------------------------------------------
+
+def test_apply_dither_output_mode_is_1bit() -> None:
+    img = Image.new("L", (32, 8), 128)
+    result = apply_dither(img, "floyd-steinberg")
+    assert result.mode == "1"
+
+
+def test_apply_dither_rgb_input_converted_to_l_first() -> None:
+    img = Image.new("RGB", (16, 4), (128, 128, 128))
+    result = apply_dither(img, "floyd-steinberg")
+    assert result.mode == "1"
+
+
+def test_apply_dither_all_black_input_stays_black() -> None:
+    img = Image.new("L", (8, 2), 0)
+    result = apply_dither(img, "threshold")
+    assert result.getpixel((0, 0)) == 0
+
+
+def test_apply_dither_all_white_input_stays_white() -> None:
+    img = Image.new("L", (8, 2), 255)
+    result = apply_dither(img, "threshold")
+    assert result.getpixel((0, 0)) != 0
+
+
+def test_apply_dither_output_dimensions_unchanged() -> None:
+    img = Image.new("L", (32, 8), 128)
+    result = apply_dither(img, "floyd-steinberg")
+    assert result.size == (32, 8)
+
+
+# ---------------------------------------------------------------------------
+# Rasterizer.prepare — direct tests
+# ---------------------------------------------------------------------------
+
+def test_rasterizer_prepare_output_is_1bit() -> None:
+    img = Image.new("RGB", (100, 50), "gray")
+    result = Rasterizer().prepare(img, target_width=100)
+    assert result.mode == "1"
+
+
+def test_rasterizer_prepare_scales_to_target_width() -> None:
+    img = Image.new("RGB", (200, 100), "white")
+    result = Rasterizer().prepare(img, target_width=100)
+    assert result.width == 100
+
+
+def test_rasterizer_prepare_height_scales_proportionally() -> None:
+    img = Image.new("RGB", (200, 100), "white")
+    result = Rasterizer().prepare(img, target_width=100)
+    # 200→100 is ×0.5, so height should be round(100 × 0.5) = 50
+    assert result.height == 50
+
+
+def test_rasterizer_prepare_same_width_preserves_height() -> None:
+    img = Image.new("RGB", (64, 32), "white")
+    result = Rasterizer().prepare(img, target_width=64)
+    assert result.width == 64
+    assert result.height == 32
+
+
+def test_rasterizer_prepare_accepts_rgba() -> None:
+    img = Image.new("RGBA", (32, 16), (0, 0, 0, 255))
+    result = Rasterizer().prepare(img, target_width=32)
+    assert result.mode == "1"
+
+
+def test_rasterizer_prepare_minimum_height_is_1() -> None:
+    # Very tall→thin aspect: 1×1000 scaled to width 1 → height stays at least 1
+    img = Image.new("L", (1000, 1), 128)
+    result = Rasterizer().prepare(img, target_width=1)
+    assert result.height >= 1

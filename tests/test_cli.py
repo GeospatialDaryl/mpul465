@@ -12,6 +12,7 @@ from mpul465.cli import (
     _hex_dump,
     _make_config,
     _make_transport,
+    cmd_dump,
     cmd_print_image,
     cmd_print_svg,
     cmd_print_text,
@@ -165,3 +166,28 @@ def test_cmd_print_svg_produces_hex_output(
     # GS v 0 → 1d 76 30 should appear in the hex dump
     assert "1d" in out
     assert "76" in out
+
+
+# ---------------------------------------------------------------------------
+# cmd_dump
+# ---------------------------------------------------------------------------
+
+def test_cmd_dump_routes_print_text() -> None:
+    args = _base_namespace(text="Hi\n", fallback="auto", dump_subcmd="print-text")
+    rc = cmd_dump(args)
+    assert rc == 0
+
+
+def test_cmd_dump_routes_print_image(tmp_path: Path) -> None:
+    img = Image.new("1", (32, 4), 0)
+    img_path = tmp_path / "t.png"
+    img.save(img_path)
+    args = _base_namespace(image=str(img_path), width=None, dump_subcmd="print-image")
+    rc = cmd_dump(args)
+    assert rc == 0
+
+
+def test_cmd_dump_unknown_subcmd_returns_2() -> None:
+    args = _base_namespace(dump_subcmd="unknown-cmd")
+    rc = cmd_dump(args)
+    assert rc == 2

@@ -168,3 +168,48 @@ def test_qr_native_sends_bytes() -> None:
     with MPUL465Printer(transport) as printer:
         printer.qr("https://example.com")
     assert b"\x1d(k" in transport.buffer
+
+
+# ---------------------------------------------------------------------------
+# print_diagnostics and run_diagnostics
+# ---------------------------------------------------------------------------
+
+def test_print_diagnostics_produces_output() -> None:
+    transport = DryRunTransport()
+    with MPUL465Printer(transport) as printer:
+        printer.print_diagnostics()
+    assert len(transport.buffer) > 0
+
+
+def test_print_diagnostics_starts_with_initialize() -> None:
+    transport = DryRunTransport()
+    with MPUL465Printer(transport) as printer:
+        printer.print_diagnostics()
+    assert transport.buffer[:2] == b"\x1b@"
+
+
+def test_print_diagnostics_contains_version_string() -> None:
+    transport = DryRunTransport()
+    with MPUL465Printer(transport) as printer:
+        printer.print_diagnostics()
+    assert b"MPU-L465" in transport.buffer
+
+
+def test_run_diagnostics_delegates_to_printer() -> None:
+    from mpul465.diagnostics import run_diagnostics
+    transport = DryRunTransport()
+    printer = MPUL465Printer(transport)
+    run_diagnostics(printer)
+    printer.close()
+    assert len(transport.buffer) > 0
+
+
+# ---------------------------------------------------------------------------
+# flush
+# ---------------------------------------------------------------------------
+
+def test_flush_does_not_raise() -> None:
+    transport = DryRunTransport()
+    with MPUL465Printer(transport) as printer:
+        printer.initialize()
+        printer.flush()
