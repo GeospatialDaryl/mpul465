@@ -105,12 +105,14 @@ def test_raster_image_data_appended_after_header() -> None:
 # Barcode / QR — stubs must raise
 # ---------------------------------------------------------------------------
 
-def test_qr_raises_not_implemented() -> None:
-    with pytest.raises(NotImplementedError, match="hardware"):
-        CommandEncoder().qr("https://example.com")
+def test_qr_returns_bytes() -> None:
+    result = CommandEncoder().qr("https://example.com")
+    assert isinstance(result, bytes)
+    assert len(result) > 0
 
 
-def test_barcode_raises_not_implemented() -> None:
+def test_barcode_returns_bytes() -> None:
     from mpul465.constants import BarcodeKind
-    with pytest.raises(NotImplementedError, match="hardware"):
-        CommandEncoder().barcode("123456", BarcodeKind.CODE128)
+    result = CommandEncoder().barcode("123456", BarcodeKind.CODE128)
+    assert isinstance(result, bytes)
+    assert len(result) > 0

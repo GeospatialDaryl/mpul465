@@ -9,7 +9,7 @@ Python driver for the SII/Seiko MPU-L465 thermal printer on Linux.
 | **v0.1** — Hardware bring-up | Serial/file/USB/dry-run transports, `CommandEncoder`, `MPUL465Printer` façade, raster image pipeline, `BitPacker`, `GraphicsEngine`, CLI (`print-text`, `print-image`, `self-test`, `dump`), CI, 46 tests | **Complete** |
 | **v0.2** — Unicode fallback | `UnicodePolicy` (NFC normalization, transliteration, replacement char), `TextEngine` with all four fallback modes, `TextRasterizer`, `FontRegistry`, raster and native text wrapping, 88 tests total | **Complete** |
 | **v0.3** — SVG support | `VectorRenderer` (CairoSVG), `GraphicsEngine.svg_to_commands()`, `printer.svg()` | **Complete** |
-| **v0.4** — Barcodes and QR | Native QR and barcode commands | Not started — requires hardware verification |
+| **v0.4** — Barcodes and QR | `CommandEncoder.qr/barcode()`, `QRRasterizer` (raster fallback), `enable_native_qr/barcode` config flags, 172 tests total | **Complete** (native byte format pending hardware verification) |
 | **v0.5** — CLI polish | Shell completion, consistent exit codes, first PyPI release | Not started |
 
 Hardware-verified values (`dots_per_line`, native column count, QR/barcode command formats) are pending physical printer arrival.

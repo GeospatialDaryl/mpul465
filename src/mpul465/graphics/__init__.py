@@ -47,6 +47,12 @@ class GraphicsEngine:
         )
         return self._encode_bands(prepared)
 
+    def qr_to_commands(self, value: str) -> bytes:
+        from mpul465.graphics.qr import QRRasterizer
+
+        qr_img = QRRasterizer().render(value)
+        return self.image_to_commands(qr_img, width="fit")
+
     def svg_to_commands(
         self,
         svg: str | bytes | Path,

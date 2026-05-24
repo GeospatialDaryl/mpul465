@@ -3,6 +3,18 @@ from __future__ import annotations
 from mpul465.constants import Alignment, BarcodeKind, ESC, GS, LF
 from mpul465.models import MonoRaster
 
+# GS k function-B barcode type IDs (ESC/POS standard; verify on hardware)
+_BARCODE_KIND_ID: dict[BarcodeKind, int] = {
+    BarcodeKind.UPCA: 65,
+    BarcodeKind.EAN13: 67,
+    BarcodeKind.EAN8: 68,
+    BarcodeKind.CODE39: 69,
+    BarcodeKind.CODE128: 73,
+}
+
+# GS ( k QR error-correction level bytes (ESC/POS standard; verify on hardware)
+_QR_EC_BYTE: dict[str, int] = {"L": 48, "M": 49, "Q": 50, "H": 51}
+
 
 class CommandEncoder:
     """Generates ESC/POS byte sequences.
@@ -69,11 +81,40 @@ class CommandEncoder:
         return header + image.data
 
     # ------------------------------------------------------------------
-    # Barcodes / QR  (command details to be verified on hardware)
+    # Barcodes / QR  (standard ESC/POS format; verify exact bytes on hardware)
     # ------------------------------------------------------------------
 
-    def qr(self, value: str) -> bytes:
-        raise NotImplementedError("QR command format must be verified on hardware")
+    def qr(
+        self,
+        value: str,
+        *,
+        module_size: int = 3,
+        error_correction: str = "M",
+    ) -> bytes:
+        # GS ( k QR code sequence (Epson-compatible ESC/POS format).
+        # Byte sequence must be verified on the MPU-L465 before trusting output.
+        ec = _QR_EC_BYTE.get(error_correction.upper())
+        if ec is None:
+            raise ValueError(f"error_correction must be L/M/Q/H, got {error_correction!r}")
+        if not 1 <= module_size <= 16:
+            raise ValueError(f"module_size must be 1–16, got {module_size}")
+
+        data = value.encode("ascii")
+        data_len = len(data) + 3
+        pL = data_len & 0xFF
+        pH = (data_len >> 8) & 0xFF
+
+        out = bytearray()
+        out += GS + b"(k" + bytes([3, 0, 49, 67, module_size])   # set size
+        out += GS + b"(k" + bytes([3, 0, 49, 69, ec])             # set EC level
+        out += GS + b"(k" + bytes([pL, pH, 49, 80, 48]) + data   # store data
+        out += GS + b"(k" + bytes([3, 0, 49, 81, 48])             # print
+        return bytes(out)
 
     def barcode(self, value: str, kind: BarcodeKind) -> bytes:
-        raise NotImplementedError("Barcode command format must be verified on hardware")
+        # GS k function-B barcode command (ESC/POS standard).
+        # Supported types and exact format must be verified on the MPU-L465.
+        m = _BARCODE_KIND_ID[kind]
+        data = value.encode("ascii")
+        n = len(data)
+        return GS + b"k" + bytes([m, n]) + data

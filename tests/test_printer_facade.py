@@ -155,16 +155,16 @@ def test_line_appends_newline() -> None:
     assert b"Hi\n" in transport.buffer
 
 
-def test_barcode_raises_not_implemented() -> None:
+def test_barcode_native_sends_bytes() -> None:
     transport = DryRunTransport()
     from mpul465.constants import BarcodeKind
     with MPUL465Printer(transport) as printer:
-        with pytest.raises(NotImplementedError):
-            printer.barcode("123456", BarcodeKind.CODE128)
+        printer.barcode("123456", BarcodeKind.CODE128)
+    assert b"\x1dk" in transport.buffer
 
 
-def test_qr_raises_not_implemented() -> None:
+def test_qr_native_sends_bytes() -> None:
     transport = DryRunTransport()
     with MPUL465Printer(transport) as printer:
-        with pytest.raises(NotImplementedError):
-            printer.qr("https://example.com")
+        printer.qr("https://example.com")
+    assert b"\x1d(k" in transport.buffer

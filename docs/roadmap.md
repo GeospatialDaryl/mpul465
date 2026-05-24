@@ -6,8 +6,8 @@
 |---------|-------|--------|
 | v0.1 | Hardware bring-up | Complete |
 | v0.2 | Unicode fallback | Complete |
-| v0.3 | SVG support | Stub |
-| v0.4 | Barcodes and QR | Not started |
+| v0.3 | SVG support | Complete |
+| v0.4 | Barcodes and QR | Complete (native commands pending hardware verification) |
 | v0.5 | CLI polish | Stub |
 
 ---
@@ -33,9 +33,10 @@
 | `GraphicsEngine` | `src/mpul465/graphics/__init__.py` | `tests/test_raster.py` | Implemented |
 | `Rasterizer` | `src/mpul465/graphics/raster.py` | `tests/test_raster.py` | Implemented |
 | `BitPacker` | `src/mpul465/graphics/packing.py` | `tests/test_packing.py` | Implemented |
-| `VectorRenderer` | `src/mpul465/graphics/vector.py` | — | Stub (needs CairoSVG) |
-| `CommandEncoder.qr()` | `src/mpul465/commands.py` | hardware only | Stub (verify on hardware) |
-| `CommandEncoder.barcode()` | `src/mpul465/commands.py` | hardware only | Stub (verify on hardware) |
+| `VectorRenderer` | `src/mpul465/graphics/vector.py` | `tests/test_svg.py` | Implemented |
+| `QRRasterizer` | `src/mpul465/graphics/qr.py` | `tests/test_barcodes.py` | Implemented |
+| `CommandEncoder.qr()` | `src/mpul465/commands.py` | `tests/test_barcodes.py` | Implemented (verify bytes on hardware) |
+| `CommandEncoder.barcode()` | `src/mpul465/commands.py` | `tests/test_barcodes.py` | Implemented (verify bytes on hardware) |
 | `cli.py` | `src/mpul465/cli.py` | — | Implemented |
 | `diagnostics.py` | `src/mpul465/diagnostics.py` | — | Implemented |
 | Exception hierarchy | `src/mpul465/exceptions.py` | (used in test_text_engine, test_raster) | Implemented |

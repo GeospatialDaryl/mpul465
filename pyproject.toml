@@ -29,6 +29,7 @@ dependencies = [
 
 [project.optional-dependencies]
 svg = ["CairoSVG>=2.7"]
+barcodes = ["qrcode[pil]>=7.4"]
 dev = [
     "pytest",
     "ruff",

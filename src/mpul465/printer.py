@@ -9,6 +9,7 @@ from PIL import Image
 from mpul465.commands import CommandEncoder
 from mpul465.config import MPUL465Config
 from mpul465.constants import Alignment, BarcodeKind, TextFallbackMode
+from mpul465.exceptions import CommandNotSupportedError
 from mpul465.graphics import GraphicsEngine
 from mpul465.graphics.packing import BitPacker
 from mpul465.graphics.raster import Rasterizer
@@ -146,14 +147,25 @@ class MPUL465Printer:
         self._write(self._graphics.svg_to_commands(svg, width=width))
 
     # ------------------------------------------------------------------
-    # Barcodes
+    # Barcodes / QR
     # ------------------------------------------------------------------
 
     def barcode(self, value: str, kind: BarcodeKind) -> None:
-        self._write(self._commands.barcode(value, kind))
+        if self.config.enable_native_barcode:
+            self._write(self._commands.barcode(value, kind))
+        else:
+            raise CommandNotSupportedError(
+                f"Native barcode is disabled (enable_native_barcode=False). "
+                "Set enable_native_barcode=True once the command format is "
+                "verified on hardware."
+            )
 
     def qr(self, value: str) -> None:
-        self._write(self._commands.qr(value))
+        if self.config.enable_native_qr:
+            self._write(self._commands.qr(value))
+        else:
+            logger.info("Native QR disabled — using raster fallback")
+            self._write(self._graphics.qr_to_commands(value))
 
     # ------------------------------------------------------------------
     # Diagnostics
