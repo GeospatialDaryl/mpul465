@@ -9,8 +9,8 @@ Python driver for the SII/Seiko MPU-L465 thermal printer on Linux.
 | **v0.1** — Hardware bring-up | Serial/file/USB/dry-run transports, `CommandEncoder`, `MPUL465Printer` façade, raster image pipeline, `BitPacker`, `GraphicsEngine`, CLI (`print-text`, `print-image`, `self-test`, `dump`), CI, 46 tests | **Complete** |
 | **v0.2** — Unicode fallback | `UnicodePolicy` (NFC normalization, transliteration, replacement char), `TextEngine` with all four fallback modes, `TextRasterizer`, `FontRegistry`, raster and native text wrapping, 88 tests total | **Complete** |
 | **v0.3** — SVG support | `VectorRenderer` (CairoSVG), `GraphicsEngine.svg_to_commands()`, `printer.svg()` | **Complete** |
-| **v0.4** — Barcodes and QR | `CommandEncoder.qr/barcode()`, `QRRasterizer` (raster fallback), `enable_native_qr/barcode` config flags, 172 tests total | **Complete** (native byte format pending hardware verification) |
-| **v0.5** — CLI polish | Shell completion, consistent exit codes, first PyPI release | Not started |
+| **v0.4** — Barcodes and QR | `CommandEncoder.qr/barcode()`, `QRRasterizer` (raster fallback), `enable_native_qr/barcode` config flags | **Complete** (native byte format pending hardware verification) |
+| **v0.5** — CLI polish | `--version`, `print-qr` subcommand, `--dump-bytes` on all commands (incl. self-test), error handling (MPUL465Error → exit 1, Ctrl-C → exit 130), `_resolve_width` helper, descriptive help text, 257 tests total | **Complete** |
 
 Hardware-verified values (`dots_per_line`, native column count, QR/barcode command formats) are pending physical printer arrival.
 
@@ -69,8 +69,11 @@ printer.svg("logo.svg", width="fit")    # requires mpul465[svg]
 mpul465 print-text --port /dev/ttyUSB0 "Hello"
 mpul465 print-image --port /dev/ttyUSB0 logo.png --width fit
 mpul465 print-svg --port /dev/ttyUSB0 logo.svg --width fit
+mpul465 print-qr --port /dev/ttyUSB0 "https://example.com"
+mpul465 print-qr "https://example.com" --raster --dump-bytes  # raster fallback, no hardware
 mpul465 self-test --port /dev/ttyUSB0
-mpul465 print-text "Hello" --dump-bytes
+mpul465 print-text "Hello" --dump-bytes   # hex dump without hardware
+mpul465 --version
 ```
 
 ## Development setup

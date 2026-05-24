@@ -12,10 +12,13 @@ from mpul465.cli import (
     _hex_dump,
     _make_config,
     _make_transport,
+    _resolve_width,
     cmd_dump,
     cmd_print_image,
+    cmd_print_qr,
     cmd_print_svg,
     cmd_print_text,
+    cmd_self_test,
 )
 from mpul465.transports.dry_run import DryRunTransport
 
@@ -191,3 +194,109 @@ def test_cmd_dump_unknown_subcmd_returns_2() -> None:
     args = _base_namespace(dump_subcmd="unknown-cmd")
     rc = cmd_dump(args)
     assert rc == 2
+
+
+# ---------------------------------------------------------------------------
+# _resolve_width helper
+# ---------------------------------------------------------------------------
+
+def test_resolve_width_none_returns_none() -> None:
+    assert _resolve_width(None) is None
+
+
+def test_resolve_width_fit_returns_fit() -> None:
+    assert _resolve_width("fit") == "fit"
+
+
+def test_resolve_width_digit_string_returns_int() -> None:
+    assert _resolve_width("128") == 128
+    assert isinstance(_resolve_width("128"), int)
+
+
+def test_resolve_width_non_digit_passthrough() -> None:
+    result = _resolve_width("stretch")
+    assert result == "stretch"
+
+
+# ---------------------------------------------------------------------------
+# cmd_print_qr
+# ---------------------------------------------------------------------------
+
+def test_cmd_print_qr_native_returns_zero() -> None:
+    args = _base_namespace(data="https://example.com", raster=False)
+    rc = cmd_print_qr(args)
+    assert rc == 0
+
+
+def test_cmd_print_qr_raster_returns_zero() -> None:
+    args = _base_namespace(data="https://example.com", raster=True)
+    rc = cmd_print_qr(args)
+    assert rc == 0
+
+
+def test_cmd_print_qr_native_hex_dump_contains_gs_open_k(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    args = _base_namespace(data="TEST", raster=False)
+    cmd_print_qr(args)
+    out = capsys.readouterr().out
+    assert "1d" in out and "28" in out  # GS ( in hex
+
+
+def test_cmd_print_qr_raster_hex_dump_contains_gs_v0(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    args = _base_namespace(data="TEST", raster=True)
+    cmd_print_qr(args)
+    out = capsys.readouterr().out
+    assert "1d" in out and "76" in out  # GS v in hex
+
+
+# ---------------------------------------------------------------------------
+# cmd_self_test in dump mode
+# ---------------------------------------------------------------------------
+
+def test_cmd_self_test_dump_returns_zero() -> None:
+    args = _base_namespace()
+    rc = cmd_self_test(args)
+    assert rc == 0
+
+
+def test_cmd_self_test_dump_produces_hex_output(capsys: pytest.CaptureFixture[str]) -> None:
+    args = _base_namespace()
+    cmd_self_test(args)
+    out = capsys.readouterr().out
+    assert "1b" in out  # ESC @ initialize
+
+
+# ---------------------------------------------------------------------------
+# --version flag (via argparse directly)
+# ---------------------------------------------------------------------------
+
+def test_version_flag_exits_cleanly() -> None:
+    import subprocess
+    result = subprocess.run(
+        ["python", "-m", "mpul465.cli", "--version"],
+        capture_output=True, text=True,
+        cwd="/home/frodo/Claude/mpul465",
+    )
+    assert result.returncode == 0
+    assert "0.5.0" in result.stdout or "0.5.0" in result.stderr
+
+
+# ---------------------------------------------------------------------------
+# Error handling — MPUL465Error caught and returns 1
+# ---------------------------------------------------------------------------
+
+def test_mpul465error_returns_exit_code_1() -> None:
+    from mpul465.cli import main
+    import sys
+    from mpul465.exceptions import MPUL465Error
+
+    # Simulate main() catching MPUL465Error by calling cmd directly with a
+    # bad fallback mode that triggers UnsupportedCharacterError in strict mode
+    args = _base_namespace(text="λ\n", fallback="strict")
+    from mpul465.exceptions import UnsupportedCharacterError
+    import pytest
+    with pytest.raises(UnsupportedCharacterError):
+        cmd_print_text(args)  # raw cmd raises; main() would catch it

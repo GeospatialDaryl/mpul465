@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mpul465"
-version = "0.1.0"
+version = "0.5.0"
 description = "Python driver for the SII MPU-L465 thermal printer"
 readme = "README.md"
 license = { text = "MIT" }
@@ -47,7 +47,7 @@ Repository = "https://github.com/GeospatialDaryl/mpul465"
 # Hatch task runner
 # ---------------------------------------------------------------------------
 [tool.hatch.envs.default]
-features = ["dev", "svg"]
+features = ["dev", "svg", "barcodes"]
 
 [tool.hatch.envs.default.scripts]
 test      = "pytest {args}"
