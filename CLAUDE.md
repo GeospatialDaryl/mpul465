@@ -111,6 +111,7 @@ Transport is a `typing.Protocol` (structural subtyping), not an ABC. Any class i
 | [docs/hardware.md](docs/hardware.md) | Calibration, baud rate, command verification table, known quirks |
 | [docs/cli.md](docs/cli.md) | All CLI subcommands and options |
 | [docs/roadmap.md](docs/roadmap.md) | Versioned feature plan, acceptance criteria per version |
+| [docs/performance.md](docs/performance.md) | Memory model, throughput estimates, tuning guidance |
 
 ## Versioned scope
 

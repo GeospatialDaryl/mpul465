@@ -74,6 +74,24 @@ This is intentional. Mixed native/raster output on the same line causes baseline
 
 Run-level fallback (e.g. `"ABC "` native + `"λ"` raster + `" DEF"` native) is a future feature. It requires solving raster glyph baseline alignment against native printer glyphs, which is a separate problem.
 
+### Edge-case normative rules
+
+These rules are deterministic and tested:
+
+| Input | `auto` | `strict` | `native` | `raster` |
+|-------|--------|----------|----------|--------|
+| Empty string `""` | Returns `[]` (no segments) | Same | Same | Same |
+| Whitespace only `"   \n"` | `NativeTextSegment` | Same | Same | `RasterTextSegment` |
+| Only newline `"\n"` | `NativeTextSegment(b"\n")` | Same | Same | `RasterTextSegment` |
+| Fully encodable line | `NativeTextSegment` | Same | Same | `RasterTextSegment` |
+| One unsupported char | `RasterTextSegment` (whole line) | `UnsupportedCharacterError` | `NativeTextSegment` with replacement | `RasterTextSegment` |
+| All unsupported | `RasterTextSegment` | `UnsupportedCharacterError` | `NativeTextSegment` of replacements | `RasterTextSegment` |
+| Multi-line input | One segment per `\n`-delimited line | Same | Same | Same |
+
+**NFC normalization is applied before the encoding test.** A string that appears to contain unsupported characters in decomposed form (e.g. `e + combining acute`) may become encodable after normalization (to `é`). The segment type reflects the post-normalization encoding decision, not the raw input.
+
+**Transliteration drops characters with no ASCII equivalent.** Greek letters, Chinese characters, and other non-Latin scripts that survive NFKD decomposition but cannot be encoded as ASCII are silently removed when `transliterate=True`. This is intentional: the alternative (raising an error or substituting `?`) would be surprising in `auto` mode. If you need all characters accounted for, use `strict` mode without transliteration.
+
 ---
 
 ## CodePage
