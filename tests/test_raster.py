@@ -68,3 +68,49 @@ def test_rgba_input_handled() -> None:
     img = Image.new("RGBA", (384, 10), (0, 0, 0, 255))
     result = engine.image_to_commands(img, width="fit")
     assert len(result) > 0
+
+
+# ---------------------------------------------------------------------------
+# Band streaming
+# ---------------------------------------------------------------------------
+
+def test_tall_image_produces_multiple_gs_v0_commands() -> None:
+    # image_chunk_height=24 (default); 48-row image → 2 bands
+    engine = make_engine(dots=32)
+    img = Image.new("1", (32, 48), 0)
+    result = engine.image_to_commands(img, width="fit")
+    gs_v0 = b"\x1dv0"
+    assert result.count(gs_v0) == 2
+
+
+def test_image_chunk_height_controls_band_count() -> None:
+    cfg = MPUL465Config(dots_per_line=32, image_chunk_height=10)
+    engine = GraphicsEngine(Rasterizer(), CommandEncoder(), cfg)
+    img = Image.new("1", (32, 31), 0)  # 31 rows / 10 = 4 bands (10,10,10,1)
+    result = engine.image_to_commands(img, width="fit")
+    assert result.count(b"\x1dv0") == 4
+
+
+def test_single_band_image_produces_one_gs_v0() -> None:
+    engine = make_engine(dots=64)
+    img = Image.new("1", (64, 5), 0)  # 5 rows < 24 chunk height → 1 band
+    result = engine.image_to_commands(img, width="fit")
+    assert result.count(b"\x1dv0") == 1
+
+
+# ---------------------------------------------------------------------------
+# _resolve_width edge cases
+# ---------------------------------------------------------------------------
+
+def test_resolve_width_invalid_string_raises() -> None:
+    engine = make_engine(dots=384)
+    img = Image.new("RGB", (100, 10), "white")
+    with pytest.raises(ValueError, match="Invalid width"):
+        engine.image_to_commands(img, width="stretch")  # type: ignore[arg-type]
+
+
+def test_resolve_width_natural_equals_dots_per_line_is_accepted() -> None:
+    engine = make_engine(dots=100)
+    img = Image.new("1", (100, 10), 0)
+    result = engine.image_to_commands(img, width=None)
+    assert len(result) > 0

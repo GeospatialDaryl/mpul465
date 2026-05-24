@@ -125,3 +125,46 @@ def test_wrap_true_with_raster_mode_produces_output() -> None:
         printer.text("λ " * 30 + "\n", fallback="raster", wrap=True)
     # Raster output includes ESC/POS GS v 0 image command prefix
     assert len(transport.buffer) > 0
+
+
+# ---------------------------------------------------------------------------
+# Additional facade methods
+# ---------------------------------------------------------------------------
+
+def test_underline_wraps_text() -> None:
+    transport = DryRunTransport()
+    with MPUL465Printer(transport) as printer:
+        printer.underline("Under\n")
+    buf = transport.buffer
+    assert b"\x1b-\x01" in buf
+    assert b"\x1b-\x00" in buf
+    assert buf.index(b"\x1b-\x01") < buf.index(b"\x1b-\x00")
+
+
+def test_align_center_emits_correct_bytes() -> None:
+    transport = DryRunTransport()
+    with MPUL465Printer(transport) as printer:
+        printer.align(pytest.importorskip("mpul465.constants").Alignment.CENTER)
+    assert b"\x1ba\x01" in transport.buffer
+
+
+def test_line_appends_newline() -> None:
+    transport = DryRunTransport()
+    with MPUL465Printer(transport) as printer:
+        printer.line("Hi")
+    assert b"Hi\n" in transport.buffer
+
+
+def test_barcode_raises_not_implemented() -> None:
+    transport = DryRunTransport()
+    from mpul465.constants import BarcodeKind
+    with MPUL465Printer(transport) as printer:
+        with pytest.raises(NotImplementedError):
+            printer.barcode("123456", BarcodeKind.CODE128)
+
+
+def test_qr_raises_not_implemented() -> None:
+    transport = DryRunTransport()
+    with MPUL465Printer(transport) as printer:
+        with pytest.raises(NotImplementedError):
+            printer.qr("https://example.com")
