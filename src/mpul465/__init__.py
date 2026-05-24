@@ -11,6 +11,8 @@ from mpul465.exceptions import (
     UnsupportedCharacterError,
 )
 from mpul465.printer import MPUL465Printer
+from mpul465.text.codepages import UnicodePolicy
+from mpul465.text.wrapping import NativeFontMetrics
 
 __all__ = [
     "MPUL465Config",
@@ -21,9 +23,11 @@ __all__ = [
     "CommandNotSupportedError",
     "GraphicsRenderError",
     "ImageTooWideError",
+    "NativeFontMetrics",
     "PrinterNotReadyError",
     "SVGRenderError",
     "TextFallbackMode",
     "TransportError",
+    "UnicodePolicy",
     "UnsupportedCharacterError",
 ]

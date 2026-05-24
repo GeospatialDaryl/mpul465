@@ -4,8 +4,8 @@
 
 | Version | Theme | Status |
 |---------|-------|--------|
-| v0.1 | Hardware bring-up | In progress |
-| v0.2 | Unicode fallback | In progress |
+| v0.1 | Hardware bring-up | Complete |
+| v0.2 | Unicode fallback | Complete |
 | v0.3 | SVG support | Stub |
 | v0.4 | Barcodes and QR | Not started |
 | v0.5 | CLI polish | Stub |

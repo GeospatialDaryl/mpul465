@@ -13,9 +13,10 @@ from mpul465.graphics import GraphicsEngine
 from mpul465.graphics.packing import BitPacker
 from mpul465.graphics.raster import Rasterizer
 from mpul465.models import NativeTextSegment, RasterTextSegment
-from mpul465.text.codepages import CodePage
+from mpul465.text.codepages import CodePage, UnicodePolicy
 from mpul465.text.engine import TextEngine, TextRasterizer
 from mpul465.text.fonts import FontRegistry
+from mpul465.text.wrapping import NativeFontMetrics
 from mpul465.transports.base import Transport
 
 if TYPE_CHECKING:
@@ -40,6 +41,9 @@ class MPUL465Printer:
         self,
         transport: Transport,
         config: MPUL465Config | None = None,
+        *,
+        unicode_policy: UnicodePolicy | None = None,
+        native_font_metrics: NativeFontMetrics | None = None,
     ) -> None:
         self.transport = transport
         self.config = config or MPUL465Config()
@@ -50,7 +54,13 @@ class MPUL465Printer:
         )
         codepage = CodePage(self.config.native_codepage)
         rasterizer = TextRasterizer(font_registry, self.config)
-        self._text_engine = TextEngine(codepage, rasterizer, self.config)
+        self._text_engine = TextEngine(
+            codepage,
+            rasterizer,
+            self.config,
+            unicode_policy=unicode_policy,
+            native_font_metrics=native_font_metrics,
+        )
         self._graphics = GraphicsEngine(Rasterizer(), self._commands, self.config)
 
     # ------------------------------------------------------------------
@@ -84,8 +94,8 @@ class MPUL465Printer:
     # Text
     # ------------------------------------------------------------------
 
-    def text(self, value: str, *, fallback: str = TextFallbackMode.AUTO) -> None:
-        for segment in self._text_engine.render_text(value, fallback=fallback):
+    def text(self, value: str, *, fallback: str = TextFallbackMode.AUTO, wrap: bool = False) -> None:
+        for segment in self._text_engine.render_text(value, fallback=fallback, wrap=wrap):
             match segment:
                 case NativeTextSegment(data=data):
                     self._write(self._commands.text_bytes(data))
