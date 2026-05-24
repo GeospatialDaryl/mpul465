@@ -4,11 +4,43 @@
 
 | Version | Theme | Status |
 |---------|-------|--------|
-| v0.1 | Hardware bring-up | Planned |
-| v0.2 | Unicode fallback | Planned |
-| v0.3 | SVG support | Planned |
-| v0.4 | Barcodes and QR | Planned |
-| v0.5 | CLI polish | Planned |
+| v0.1 | Hardware bring-up | Complete |
+| v0.2 | Unicode fallback | Complete |
+| v0.3 | SVG support | Stub |
+| v0.4 | Barcodes and QR | Not started |
+| v0.5 | CLI polish | Stub |
+
+---
+
+## Implementation status
+
+| Component | Source file | Test file | Status |
+|-----------|-------------|-----------|--------|
+| `MPUL465Config` | `src/mpul465/config.py` | — | Implemented |
+| `MPUL465Printer` | `src/mpul465/printer.py` | `tests/test_printer_facade.py` | Implemented |
+| `CommandEncoder` | `src/mpul465/commands.py` | `tests/test_commands.py` | Implemented (QR/barcode stubs) |
+| `MonoRaster` / `PrintSegment` | `src/mpul465/models.py` | — | Implemented |
+| `Transport` (Protocol) | `src/mpul465/transports/base.py` | — | Implemented |
+| `SerialTransport` | `src/mpul465/transports/serial.py` | hardware only | Implemented |
+| `FileTransport` | `src/mpul465/transports/file.py` | — | Implemented |
+| `UsbRawTransport` | `src/mpul465/transports/usb_raw.py` | — | Implemented |
+| `DryRunTransport` | `src/mpul465/transports/dry_run.py` | (used in all tests) | Implemented |
+| `CodePage` | `src/mpul465/text/codepages.py` | `tests/test_codepages.py` | Implemented |
+| `TextEngine` | `src/mpul465/text/engine.py` | `tests/test_text_engine.py` | Implemented |
+| `TextRasterizer` | `src/mpul465/text/engine.py` | `tests/test_text_engine.py` | Implemented |
+| `FontRegistry` | `src/mpul465/text/fonts.py` | — | Implemented |
+| `NativeFontMetrics` / wrapping | `src/mpul465/text/wrapping.py` | — | Implemented |
+| `GraphicsEngine` | `src/mpul465/graphics/__init__.py` | `tests/test_raster.py` | Implemented |
+| `Rasterizer` | `src/mpul465/graphics/raster.py` | `tests/test_raster.py` | Implemented |
+| `BitPacker` | `src/mpul465/graphics/packing.py` | `tests/test_packing.py` | Implemented |
+| `VectorRenderer` | `src/mpul465/graphics/vector.py` | — | Stub (needs CairoSVG) |
+| `CommandEncoder.qr()` | `src/mpul465/commands.py` | hardware only | Stub (verify on hardware) |
+| `CommandEncoder.barcode()` | `src/mpul465/commands.py` | hardware only | Stub (verify on hardware) |
+| `cli.py` | `src/mpul465/cli.py` | — | Implemented |
+| `diagnostics.py` | `src/mpul465/diagnostics.py` | — | Implemented |
+| Exception hierarchy | `src/mpul465/exceptions.py` | (used in test_text_engine, test_raster) | Implemented |
+| Golden byte tests | `tests/golden/` | `tests/test_commands.py` | Not yet generated |
+| CI workflow | `.github/workflows/ci.yml` | — | Implemented |
 
 ---
 

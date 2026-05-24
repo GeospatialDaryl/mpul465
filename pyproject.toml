@@ -5,9 +5,23 @@ build-backend = "hatchling.build"
 [project]
 name = "mpul465"
 version = "0.1.0"
-description = "Python interface for the SII MPU-L465 thermal printer"
+description = "Python driver for the SII MPU-L465 thermal printer"
 readme = "README.md"
+license = { text = "MIT" }
 requires-python = ">=3.11"
+authors = [{ name = "Daryl Van Dyke", email = "vandyke.geospatial@gmail.com" }]
+keywords = ["thermal", "printer", "escpos", "sii", "receipt"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Printing",
+    "Typing :: Typed",
+]
 dependencies = [
     "pyserial>=3.5",
     "Pillow>=10",
@@ -24,12 +38,43 @@ dev = [
 [project.scripts]
 mpul465 = "mpul465.cli:main"
 
+[project.urls]
+Repository = "https://github.com/GeospatialDaryl/mpul465"
+"Bug Tracker" = "https://github.com/GeospatialDaryl/mpul465/issues"
+
+# ---------------------------------------------------------------------------
+# Hatch task runner
+# ---------------------------------------------------------------------------
+[tool.hatch.envs.default]
+features = ["dev", "svg"]
+
+[tool.hatch.envs.default.scripts]
+test      = "pytest {args}"
+lint      = ["ruff check src tests", "ruff format --check src tests"]
+typecheck = "mypy src"
+check     = ["hatch run lint", "hatch run typecheck", "hatch run test"]
+
+# ---------------------------------------------------------------------------
+# Pytest
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "hardware: requires a physical MPU-L465 printer (deselect with -m 'not hardware')",
+]
+
+# ---------------------------------------------------------------------------
+# Ruff
+# ---------------------------------------------------------------------------
 [tool.ruff]
 line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM"]
 
+# ---------------------------------------------------------------------------
+# Mypy
+# ---------------------------------------------------------------------------
 [tool.mypy]
 python_version = "3.11"
 strict = true
